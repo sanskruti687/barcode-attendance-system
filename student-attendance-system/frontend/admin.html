@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Attendance System - Admin Panel</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==================== CSS STYLES ==================== */
+        
+        :root {
+            --bg-primary: #0a0e27;
+            --bg-secondary: #141b3d;
+            --bg-card: #1a2350;
+            --accent-primary: #00f5d4;
+            --accent-secondary: #00bbf9;
+            --accent-warm: #fee440;
+            --text-primary: #ffffff;
+            --text-secondary: #a0aec0;
+            --success: #06ffa5;
+            --error: #ff006e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Syne', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(0, 245, 212, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 187, 249, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(254, 228, 64, 0.05) 0%, transparent 50%);
+            animation: drift 20s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        @keyframes drift {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(5%, 5%) rotate(5deg); }
+            66% { transform: translate(-3%, 3%) rotate(-3deg); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 0;
+            margin-bottom: 3rem;
+            border-bottom: 1px solid rgba(0, 245, 212, 0.1);
+            animation: slideDown 0.6s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            box-shadow: 0 8px 32px rgba(0, 245, 212, 0.3);
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .user-info a {
+            color: var(--accent-primary);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .user-info a:hover {
+            color: var(--accent-secondary);
+        }
+
+        .admin-panel {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 2.5rem;
+            border: 1px solid rgba(0, 245, 212, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease-out backwards;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 28px;
+            background: linear-gradient(180deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: var(--bg-secondary);
+            border: 1px solid rgba(0, 245, 212, 0.2);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(0, 245, 212, 0.1);
+        }
+
+        .actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 1rem 2.5rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: 'Syne', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: var(--bg-primary);
+            box-shadow: 0 8px 24px rgba(0, 245, 212, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(0, 245, 212, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .student-card {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .student-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateX(5px);
+        }
+
+        .student-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .student-card-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .student-card-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .student-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .student-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .student-list::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 4px;
+        }
+
+        .student-list::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+            border-radius: 4px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab {
+            padding: 1rem 2rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-family: 'Syne', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tab.active {
+            color: var(--accent-primary);
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 0.5rem;
+        }
+
+        thead {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+        }
+
+        tbody tr {
+            background: var(--bg-secondary);
+            transition: all 0.3s ease;
+        }
+
+        tbody tr:hover {
+            background: rgba(0, 245, 212, 0.05);
+            transform: translateX(5px);
+        }
+
+        td {
+            padding: 1.2rem 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        td:first-child {
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px 0 0 12px;
+        }
+
+        td:last-child {
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 0 12px 12px 0;
+        }
+
+        .time-stamp {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-secondary);
+        }
+
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .alert-success {
+            background: rgba(6, 255, 165, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(6, 255, 165, 0.3);
+        }
+
+        .alert-error {
+            background: rgba(255, 0, 110, 0.15);
+            color: var(--error);
+            border: 1px solid rgba(255, 0, 110, 0.3);
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-10px); }
+        }
+
+        @media (max-width: 968px) {
+            .logo h1 {
+                font-size: 1.2rem;
+            }
+            .section-title {
+                font-size: 1.5rem;
+            }
+            table {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <div class="logo-icon">SA</div>
+                <h1>Student Attendance System</h1>
+            </div>
+            <div class="user-info">
+                <span><a href="/">Dashboard</a></span>
+                <span>|</span>
+                <span>Admin Panel</span>
+                <span>|</span>
+                <span id="current-date">Loading...</span>
+            </div>
+        </header>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('students')">Manage Students</button>
+            <button class="tab" onclick="switchTab('reports')">Reports</button>
+        </div>
+
+        <!-- Students Tab -->
+        <div id="studentsTab" class="tab-content active">
+            <!-- Add Student Form -->
+            <div class="admin-panel">
+                <h2 class="section-title">Add New Student</h2>
+                
+                <form id="addStudentForm">
+                    <div class="form-group">
+                        <label for="barcode_id">Barcode ID *</label>
+                        <input type="text" class="input-field" id="barcode_id" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="name">Student Name *</label>
+                        <input type="text" class="input-field" id="name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="class">Class *</label>
+                        <input type="text" class="input-field" id="class" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" class="input-field" id="email">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone</label>
+                        <input type="tel" class="input-field" id="phone">
+                    </div>
+
+                    <div class="actions">
+                        <button type="submit" class="btn btn-primary">Add Student</button>
+                        <button type="reset" class="btn btn-secondary">Clear</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Student List -->
+            <div class="admin-panel">
+                <h2 class="section-title">All Students</h2>
+
+                <div class="search-bar">
+                    <input 
+                        type="text" 
+                        class="input-field" 
+                        placeholder="Search by name, barcode, or class..." 
+                        id="searchInput"
+                    >
+                    <button class="btn btn-secondary" onclick="searchStudents()">Search</button>
+                </div>
+
+                <div class="student-list" id="studentList">
+                    <p style="text-align: center; color: var(--text-secondary);">Loading students...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports Tab -->
+        <div id="reportsTab" class="tab-content">
+            <div class="admin-panel">
+                <h2 class="section-title">Attendance Reports</h2>
+
+                <div class="form-group">
+                    <label for="start_date">Start Date</label>
+                    <input type="date" class="input-field" id="start_date">
+                </div>
+
+                <div class="form-group">
+                    <label for="end_date">End Date</label>
+                    <input type="date" class="input-field" id="end_date">
+                </div>
+
+                <button class="btn btn-primary" onclick="generateReport()">Generate Report</button>
+
+                <div id="reportResults" style="margin-top: 2rem;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== JAVASCRIPT CODE ====================
+        
+        const API_BASE_URL = window.location.origin + '/api';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCurrentDate();
+            loadStudents();
+            setupFormHandler();
+        });
+
+        function updateCurrentDate() {
+            const dateElement = document.getElementById('current-date');
+            if (dateElement) {
+                const options = { year: 'numeric', month: 'short', day: 'numeric' };
+                dateElement.textContent = new Date().toLocaleDateString('en-US', options);
+            }
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            if (tab === 'students') {
+                document.getElementById('studentsTab').classList.add('active');
+            } else if (tab === 'reports') {
+                document.getElementById('reportsTab').classList.add('active');
+            }
+        }
+
+        function setupFormHandler() {
+            const form = document.getElementById('addStudentForm');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await addStudent();
+            });
+        }
+
+        async function addStudent() {
+            const data = {
+                barcode_id: document.getElementById('barcode_id').value,
+                name: document.getElementById('name').value,
+                class: document.getElementById('class').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/students`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification('Student added successfully!', 'success');
+                    document.getElementById('addStudentForm').reset();
+                    loadStudents();
+                } else {
+                    showNotification(result.message, 'error');
+                }
+            } catch (error) {
+                showNotification('Failed to add student', 'error');
+                console.error('Error:', error);
+            }
+        }
+
+        async function loadStudents() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/students`);
+                const result = await response.json();
+
+                if (result.success) {
+                    displayStudents(result.data);
+                }
+            } catch (error) {
+                console.error('Error loading students:', error);
+            }
+        }
+
+        function displayStudents(students) {
+            const listElement = document.getElementById('studentList');
+            
+            if (students.length === 0) {
+                listElement.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No students found</p>';
+                return;
+            }
+
+            listElement.innerHTML = students.map(student => `
+                <div class="student-card">
+                    <div class="student-card-header">
+                        <div>
+                            <div class="student-card-name">${student.name}</div>
+                            <div style="color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; margin-top: 0.25rem;">
+                                ${student.barcode_id}
+                            </div>
+                        </div>
+                        <div class="student-card-actions">
+                            <button class="btn btn-secondary btn-small" onclick="deleteStudent(${student.id}, '${student.name}')">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                        <div>📚 ${student.class}</div>
+                        ${student.email ? `<div>✉️ ${student.email}</div>` : ''}
+                        ${student.phone ? `<div>📱 ${student.phone}</div>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function deleteStudent(id, name) {
+            if (!confirm(`Are you sure you want to delete ${name}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/students/${id}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification('Student deleted successfully', 'success');
+                    loadStudents();
+                } else {
+                    showNotification(result.message, 'error');
+                }
+            } catch (error) {
+                showNotification('Failed to delete student', 'error');
+                console.error('Error:', error);
+            }
+        }
+
+        async function searchStudents() {
+            const keyword = document.getElementById('searchInput').value.trim();
+            
+            if (!keyword) {
+                loadStudents();
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/students/search?q=${encodeURIComponent(keyword)}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    displayStudents(result.data);
+                }
+            } catch (error) {
+                console.error('Error searching students:', error);
+            }
+        }
+
+        async function generateReport() {
+            const startDate = document.getElementById('start_date').value;
+            const endDate = document.getElementById('end_date').value;
+
+            if (!startDate || !endDate) {
+                showNotification('Please select both start and end dates', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/attendance/report?start_date=${startDate}&end_date=${endDate}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    displayReport(result.data);
+                } else {
+                    showNotification(result.message, 'error');
+                }
+            } catch (error) {
+                showNotification('Failed to generate report', 'error');
+                console.error('Error:', error);
+            }
+        }
+
+        function displayReport(data) {
+            const resultsDiv = document.getElementById('reportResults');
+            
+            const html = `
+                <h3 style="margin-bottom: 1rem;">Report: ${data.start_date} to ${data.end_date}</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Barcode ID</th>
+                            <th>Class</th>
+                            <th>Days Present</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.report.map(record => `
+                            <tr>
+                                <td>${record.name}</td>
+                                <td class="time-stamp">${record.barcode_id}</td>
+                                <td>${record.class}</td>
+                                <td>${record.days_present}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            resultsDiv.innerHTML = html;
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type}`;
+            notification.textContent = message;
+            notification.style.position = 'fixed';
+            notification.style.top = '20px';
+            notification.style.right = '20px';
+            notification.style.zIndex = '1000';
+            notification.style.minWidth = '300px';
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'fadeOut 0.3s ease-out';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Attendance System - Dashboard</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Barcode Scanner Library -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    
+    <style>
+        /* ==================== CSS STYLES ==================== */
+        
+        :root {
+            --bg-primary: #0a0e27;
+            --bg-secondary: #141b3d;
+            --bg-card: #1a2350;
+            --accent-primary: #00f5d4;
+            --accent-secondary: #00bbf9;
+            --accent-warm: #fee440;
+            --text-primary: #ffffff;
+            --text-secondary: #a0aec0;
+            --success: #06ffa5;
+            --error: #ff006e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Syne', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(0, 245, 212, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 187, 249, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(254, 228, 64, 0.05) 0%, transparent 50%);
+            animation: drift 20s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        @keyframes drift {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(5%, 5%) rotate(5deg); }
+            66% { transform: translate(-3%, 3%) rotate(-3deg); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 0;
+            margin-bottom: 3rem;
+            border-bottom: 1px solid rgba(0, 245, 212, 0.1);
+            animation: slideDown 0.6s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            box-shadow: 0 8px 32px rgba(0, 245, 212, 0.3);
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .user-info a {
+            color: var(--accent-primary);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .user-info a:hover {
+            color: var(--accent-secondary);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .scanner-section {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 2.5rem;
+            border: 1px solid rgba(0, 245, 212, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            animation: fadeInUp 0.8s ease-out 0.2s backwards;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 28px;
+            background: linear-gradient(180deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 2px;
+        }
+
+        .scanner-container {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            border: 2px dashed rgba(0, 245, 212, 0.3);
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scanner-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+            animation: scan 2s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        #reader {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .camera-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, rgba(0, 245, 212, 0.1), rgba(0, 187, 249, 0.1));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            border: 3px solid rgba(0, 245, 212, 0.2);
+        }
+
+        .scanner-status {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            font-family: 'JetBrains Mono', monospace;
+            text-align: center;
+        }
+
+        .btn {
+            padding: 1rem 2.5rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: 'Syne', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: var(--bg-primary);
+            box-shadow: 0 8px 24px rgba(0, 245, 212, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(0, 245, 212, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: var(--text-primary);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .manual-entry {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            background: var(--bg-secondary);
+            border: 1px solid rgba(0, 245, 212, 0.2);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(0, 245, 212, 0.1);
+        }
+
+        .stats-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(0, 245, 212, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            animation: fadeInUp 0.8s ease-out 0.4s backwards;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, rgba(0, 245, 212, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            transform: translate(50%, -50%);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .stat-value {
+            font-size: 3rem;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .attendance-table {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 2.5rem;
+            border: 1px solid rgba(0, 245, 212, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            grid-column: 1 / -1;
+            animation: fadeInUp 0.8s ease-out 0.6s backwards;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 0.5rem;
+        }
+
+        thead {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+        }
+
+        tbody tr {
+            background: var(--bg-secondary);
+            transition: all 0.3s ease;
+        }
+
+        tbody tr:hover {
+            background: rgba(0, 245, 212, 0.05);
+            transform: translateX(5px);
+        }
+
+        td {
+            padding: 1.2rem 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        td:first-child {
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px 0 0 12px;
+        }
+
+        td:last-child {
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 0 12px 12px 0;
+        }
+
+        .student-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .status-badge {
+            padding: 0.4rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-present {
+            background: rgba(6, 255, 165, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(6, 255, 165, 0.3);
+        }
+
+        .time-stamp {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-secondary);
+        }
+
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .alert-success {
+            background: rgba(6, 255, 165, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(6, 255, 165, 0.3);
+        }
+
+        .alert-error {
+            background: rgba(255, 0, 110, 0.15);
+            color: var(--error);
+            border: 1px solid rgba(255, 0, 110, 0.3);
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(0, 245, 212, 0.1);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes successPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(6, 255, 165, 0.7); }
+            50% { box-shadow: 0 0 0 20px rgba(6, 255, 165, 0); }
+        }
+
+        .success-indicator {
+            animation: successPulse 1s ease-out;
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-10px); }
+        }
+
+        @media (max-width: 968px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            .logo h1 {
+                font-size: 1.2rem;
+            }
+            .section-title {
+                font-size: 1.5rem;
+            }
+            .stat-value {
+                font-size: 2.5rem;
+            }
+            table {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <div class="logo-icon">SA</div>
+                <h1>Student Attendance System</h1>
+            </div>
+            <div class="user-info">
+                <span>Dashboard</span>
+                <span>|</span>
+                <span><a href="/admin">Admin Panel</a></span>
+                <span>|</span>
+                <span id="current-date">Loading...</span>
+            </div>
+        </header>
+
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Scanner Section -->
+            <div class="scanner-section">
+                <h2 class="section-title">Barcode Scanner</h2>
+                
+                <div class="scanner-container" id="scannerArea">
+                    <div class="camera-icon">📷</div>
+                    <div class="scanner-status">Ready to scan student barcode</div>
+                </div>
+
+                <button class="btn btn-primary" id="startScannerBtn">Start Scanner</button>
+
+                <div class="manual-entry">
+                    <input 
+                        type="text" 
+                        class="input-field" 
+                        placeholder="Or enter barcode manually..." 
+                        id="manualBarcode"
+                    >
+                    <button class="btn btn-secondary" id="manualSubmitBtn">Submit</button>
+                </div>
+            </div>
+
+            <!-- Stats Section -->
+            <div class="stats-section">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Today's Attendance</span>
+                        <div class="stat-icon" style="background: rgba(6, 255, 165, 0.15);">✓</div>
+                    </div>
+                    <div class="stat-value" id="todayCount">0</div>
+                    <div class="stat-description">Students marked present</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Total Students</span>
+                        <div class="stat-icon" style="background: rgba(0, 187, 249, 0.15);">👥</div>
+                    </div>
+                    <div class="stat-value" id="totalStudents">0</div>
+                    <div class="stat-description">Enrolled in database</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Attendance Rate</span>
+                        <div class="stat-icon" style="background: rgba(254, 228, 64, 0.15);">📊</div>
+                    </div>
+                    <div class="stat-value">
+                        <span id="attendanceRate">0</span><span style="font-size: 1.5rem;">%</span>
+                    </div>
+                    <div class="stat-description">Current session</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Attendance Table -->
+        <div class="attendance-table">
+            <h2 class="section-title">Today's Attendance Records</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Barcode ID</th>
+                        <th>Class</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="attendanceTableBody">
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-secondary);">
+                            Loading attendance records...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // ==================== JAVASCRIPT CODE ====================
+        
+        // Configuration
+        const API_BASE_URL = window.location.origin + '/api';
+
+        // Global variables
+        let html5QrcodeScanner = null;
+        let isScannerActive = false;
+
+        // ==================== INITIALIZATION ====================
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCurrentDate();
+            loadStatistics();
+            loadTodayAttendance();
+            setupEventListeners();
+            
+            // Refresh data every 30 seconds
+            setInterval(() => {
+                loadStatistics();
+                loadTodayAttendance();
+            }, 30000);
+        });
+
+        function updateCurrentDate() {
+            const dateElement = document.getElementById('current-date');
+            if (dateElement) {
+                const options = { year: 'numeric', month: 'short', day: 'numeric' };
+                dateElement.textContent = new Date().toLocaleDateString('en-US', options);
+            }
+        }
+
+        function setupEventListeners() {
+            const scannerBtn = document.getElementById('startScannerBtn');
+            if (scannerBtn) {
+                scannerBtn.addEventListener('click', toggleScanner);
+            }
+            
+            const manualInput = document.getElementById('manualBarcode');
+            const manualBtn = document.getElementById('manualSubmitBtn');
+            
+            if (manualInput) {
+                manualInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        handleManualEntry();
+                    }
+                });
+            }
+            
+            if (manualBtn) {
+                manualBtn.addEventListener('click', handleManualEntry);
+            }
+        }
+
+        // ==================== SCANNER FUNCTIONS ====================
+
+        function toggleScanner() {
+            if (isScannerActive) {
+                stopScanner();
+            } else {
+                startScanner();
+            }
+        }
+
+        function startScanner() {
+            const scannerArea = document.getElementById('scannerArea');
+            const scannerBtn = document.getElementById('startScannerBtn');
+            
+            scannerArea.innerHTML = '<div id="reader"></div>';
+            
+            html5QrcodeScanner = new Html5QrcodeScanner(
+                "reader",
+                { 
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0
+                },
+                false
+            );
+            
+            html5QrcodeScanner.render(onScanSuccess, onScanError);
+            
+            isScannerActive = true;
+            
+            if (scannerBtn) {
+                scannerBtn.textContent = 'Stop Scanner';
+                scannerBtn.classList.remove('btn-primary');
+                scannerBtn.classList.add('btn-danger');
+            }
+        }
+
+        function stopScanner() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear();
+                html5QrcodeScanner = null;
+            }
+            
+            isScannerActive = false;
+            
+            const scannerArea = document.getElementById('scannerArea');
+            scannerArea.innerHTML = `
+                <div class="camera-icon">📷</div>
+                <div class="scanner-status">Ready to scan student barcode</div>
+            `;
+            
+            const scannerBtn = document.getElementById('startScannerBtn');
+            if (scannerBtn) {
+                scannerBtn.textContent = 'Start Scanner';
+                scannerBtn.classList.remove('btn-danger');
+                scannerBtn.classList.add('btn-primary');
+            }
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            stopScanner();
+            markAttendance(decodedText);
+        }
+
+        function onScanError(error) {
+            // Ignore continuous scanning errors
+        }
+
+        // ==================== ATTENDANCE FUNCTIONS ====================
+
+        async function markAttendance(barcodeId) {
+            try {
+                showLoading('Marking attendance...');
+                
+                const response = await fetch(`${API_BASE_URL}/attendance`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ barcode_id: barcodeId })
+                });
+                
+                const result = await response.json();
+                
+                hideLoading();
+                
+                if (result.success) {
+                    showSuccess(result.data.student);
+                    loadStatistics();
+                    loadTodayAttendance();
+                } else {
+                    showError(result.message);
+                }
+            } catch (error) {
+                hideLoading();
+                showError('Failed to mark attendance. Please try again.');
+                console.error('Error marking attendance:', error);
+            }
+        }
+
+        function handleManualEntry() {
+            const input = document.getElementById('manualBarcode');
+            const barcodeId = input.value.trim();
+            
+            if (!barcodeId) {
+                showError('Please enter a barcode ID');
+                return;
+            }
+            
+            markAttendance(barcodeId);
+            input.value = '';
+        }
+
+        async function loadTodayAttendance() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/attendance/today`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    updateAttendanceTable(result.data);
+                }
+            } catch (error) {
+                console.error('Error loading attendance:', error);
+            }
+        }
+
+        async function loadStatistics() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/attendance/statistics`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    updateStatistics(result.data);
+                }
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+
+        // ==================== UI UPDATE FUNCTIONS ====================
+
+        function updateStatistics(stats) {
+            const todayCountEl = document.getElementById('todayCount');
+            const totalStudentsEl = document.getElementById('totalStudents');
+            const attendanceRateEl = document.getElementById('attendanceRate');
+            
+            if (todayCountEl) todayCountEl.textContent = stats.today_count || 0;
+            if (totalStudentsEl) totalStudentsEl.textContent = stats.total_students || 0;
+            if (attendanceRateEl) attendanceRateEl.textContent = stats.today_rate || 0;
+        }
+
+        function updateAttendanceTable(attendanceData) {
+            const tbody = document.getElementById('attendanceTableBody');
+            if (!tbody) return;
+            
+            if (attendanceData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-secondary);">
+                            No attendance records for today
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = attendanceData.map(record => {
+                const initials = getInitials(record.name);
+                const time = formatTime(record.time);
+                
+                return `
+                    <tr>
+                        <td>
+                            <div class="student-info">
+                                <div class="avatar">${initials}</div>
+                                <span>${record.name}</span>
+                            </div>
+                        </td>
+                        <td class="time-stamp">${record.barcode_id}</td>
+                        <td>${record.class}</td>
+                        <td class="time-stamp">${time}</td>
+                        <td><span class="status-badge status-present">Present</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function showSuccess(student) {
+            const scannerArea = document.getElementById('scannerArea');
+            
+            scannerArea.classList.add('success-indicator');
+            scannerArea.innerHTML = `
+                <div class="camera-icon" style="background: rgba(6, 255, 165, 0.2);">✓</div>
+                <div class="scanner-status" style="color: var(--success);">Attendance Marked Successfully!</div>
+                <div style="font-size: 1.2rem; margin-top: 1rem; font-weight: 600;">${student.name}</div>
+                <div style="font-family: 'JetBrains Mono', monospace; color: var(--text-secondary); margin-top: 0.5rem;">
+                    ${student.barcode_id} | ${student.class}
+                </div>
+            `;
+            
+            showNotification('Attendance marked successfully!', 'success');
+            
+            setTimeout(() => {
+                scannerArea.classList.remove('success-indicator');
+                scannerArea.innerHTML = `
+                    <div class="camera-icon">📷</div>
+                    <div class="scanner-status">Ready to scan student barcode</div>
+                `;
+            }, 3000);
+        }
+
+        function showError(message) {
+            showNotification(message, 'error');
+            
+            const scannerArea = document.getElementById('scannerArea');
+            scannerArea.innerHTML = `
+                <div class="camera-icon" style="background: rgba(255, 0, 110, 0.2);">✗</div>
+                <div class="scanner-status" style="color: var(--error);">${message}</div>
+            `;
+            
+            setTimeout(() => {
+                scannerArea.innerHTML = `
+                    <div class="camera-icon">📷</div>
+                    <div class="scanner-status">Ready to scan student barcode</div>
+                `;
+            }, 3000);
+        }
+
+        function showLoading(message = 'Loading...') {
+            const scannerArea = document.getElementById('scannerArea');
+            scannerArea.innerHTML = `
+                <div class="spinner"></div>
+                <div class="scanner-status" style="margin-top: 1rem;">${message}</div>
+            `;
+        }
+
+        function hideLoading() {
+            // Loading is hidden by showing success or error
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type}`;
+            notification.textContent = message;
+            notification.style.position = 'fixed';
+            notification.style.top = '20px';
+            notification.style.right = '20px';
+            notification.style.zIndex = '1000';
+            notification.style.minWidth = '300px';
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'fadeOut 0.3s ease-out';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // ==================== HELPER FUNCTIONS ====================
+
+        function getInitials(name) {
+            return name
+                .split(' ')
+                .map(word => word[0])
+                .join('')
+                .toUpperCase()
+                .substring(0, 2);
+        }
+
+        function formatTime(timeString) {
+            const [hours, minutes] = timeString.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const displayHour = hour % 12 || 12;
+            return `${displayHour}:${minutes} ${ampm}`;
+        }
+    </script>
+</body>
+</html>
